@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.12/paper-full.min.js" integrity="sha512-r9esUfqrSMX8ZbtkH9ux0uK9gnYdDO4O7aoJjNQ4Im1SvNgL64ru38cPvDKOcyNQzt6cypclmO9qxqSrbExOBw==" crossorigin="anonymous"></script>
+    <!-- Define inlined PaperScript associate it with myCanvas -->
+    <script src="js/script.js" type="text/paperscript" canvas="myCanvas"></script>
+  </head>
+  <body>
+    <canvas id="myCanvas" resize></canvas>
+    <ul>
+      {% for task in tasks %}
+      <li>
+        {% if task.cancelled() %}
+        Task cancelled
+        {% elif task.running() %}
+        Task running
+        {% elif task.done() %}
+        Taks done
+        {% else %}
+        Task not started
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </body>
+</html>
