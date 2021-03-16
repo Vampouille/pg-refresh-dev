@@ -3,7 +3,7 @@
  */
 
 var Httpreq = new XMLHttpRequest(); // a new request
-Httpreq.open("GET", "/api/task/", false);
+Httpreq.open("GET", "/api/database/", false);
 Httpreq.send(null);
 dbs = JSON.parse(Httpreq.responseText);
 console.log(dbs);

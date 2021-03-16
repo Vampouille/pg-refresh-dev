@@ -13,7 +13,16 @@
                 "FLASK_APP": "server.py",
                 "FLASK_ENV": "development",
                 "FLASK_DEBUG": "0",
-                "PYTHONPATH": "${workspaceRoot}"
+                "PYTHONPATH": "${workspaceRoot}",
+                "PG_REFRESH_DEV_DATABASES": "prod, preprod, staging, int,dev",
+                "PGHOST": "127.0.0.1",
+                "PGUSER": "postgres",
+                "PGPASSWORD": "pgpass",
+                "PG_REFRESH_DEV_PROD_PGDATABASE": "prod",
+                "PG_REFRESH_DEV_PREPROD_PGDATABASE": "preprod",
+                "PG_REFRESH_DEV_STAGING_PGDATABASE": "staging",
+                "PG_REFRESH_DEV_INT_PGDATABASE": "int",
+                "PG_REFRESH_DEV_DEV_PGDATABASE": "dev",
             },
             "args": [
                 "run",

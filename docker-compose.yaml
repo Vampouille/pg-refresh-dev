@@ -1,0 +1,13 @@
+version: '3'
+services: 
+  db:
+    image: postgres:12
+    environment:
+      POSTGRES_PASSWORD: pgpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+volumes:
+  pgdata:
