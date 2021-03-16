@@ -6,7 +6,9 @@ from task import Task
 executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 tasks = {}
 app = Flask(__name__)
-
+for x in range(0, 5):
+    task = Task(executor, 'PROD', 'DEV')
+    tasks[task.id] = task
 
 @app.route('/assets/<path:path>')
 def send_assets(path):
