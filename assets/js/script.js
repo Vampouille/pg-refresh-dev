@@ -5,31 +5,48 @@
 var Httpreq = new XMLHttpRequest(); // a new request
 Httpreq.open("GET", "/api/database/", false);
 Httpreq.send(null);
-dbs = JSON.parse(Httpreq.responseText);
+dbs_json = JSON.parse(Httpreq.responseText);
 console.log(dbs);
+var dbs = {}
+dbs_group = new Group()
+
+for (var i = 0; i < dbs_json.length; i++)
+    dbs[dbs_json[i].id] = dbs_json[i]
 
 var rectangle = new Rectangle(new Point(50, 50), new Point(150, 100));
 var path = new Path.Rectangle(rectangle);
 path.fillColor = '#e9e9ff';
 
-var db;
+var db_icon;
 
 project.importSVG('assets/img/db.svg', function(item, raw) {
-    var db_icon = new Path();
-    item.position = new Point(100, 100);
-    db = item
-    /*db_icon.position = new Point(100, 100);
-    db_icon.add(item);
-    db_icon.position = new Point(100, 100);*/
     console.log("SVG loaded");
-    });
+    var db_position = new Point(20,50);
+    
+    for (var id in dbs) {
+        item.position = db_position;
+        dbs[id]['item'] = item;
+        dbs_group.addChild(item);
+        item = item.clone();
+        db_position += new Point(170,50);
+    }
+    item.remove()
+    debugger;
+});
 
 function onFrame(event) {
-    if (db === undefined) {
+    if (db_icon === undefined) {
         console.log("SVG not loaded");
     } else {
-        db.position += new Point(1, 1);
+        db_icon.position += new Point(1, 1);
     }
+}
+
+
+function onMouseDrag(event) {
+    var result = dbs_group.hitTest(event.point, {fill: true, stroke: false, segments: false, bounds: true, class: Path});
+    console.log(result);
+    result.item.selected = true;
 }
 
 // Create a Paper.js Path to draw a line into it:
