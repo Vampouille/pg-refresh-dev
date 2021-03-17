@@ -45,17 +45,19 @@ var moving_icon;
 var drop_icon;
 
 function onMouseDown(event) {
-    selected_db = undefined;
-    for (var id in dbs) {
-        if(event.point.isInside(dbs[id]['item'].bounds)){
-            selected_db = id;
-            moving_icon = dbs[id]['item'].clone();
-            moving_icon.strokeColor = '#FF0000';
-            moving_icon.fillColor = '#FF0000';
-            break;
+    if(drop_icon == undefined){
+    
+        for (var id in dbs) {
+            if(event.point.isInside(dbs[id]['item'].bounds)){
+                selected_db = id;
+                moving_icon = dbs[id]['item'].clone();
+                moving_icon.strokeColor = '#FF0000';
+                moving_icon.fillColor = '#FF0000';
+                break;
+            }
         }
+        console.log("Selected DB " + selected_db);
     }
-    console.log("Selected DB " + selected_db);
 }
 
 function onMouseDrag(event){
@@ -66,11 +68,10 @@ function onMouseDrag(event){
 
 function onMouseUp(event){
     if(moving_icon != undefined){
-        drop_id = undefined;
+        drop_db = undefined;
         for (var id in dbs) {
             if(id != selected_db && dbs[id]['item'].bounds.intersects(moving_icon.bounds)){
                 drop_db = id;
-                console.log("Copy " + selected_db + " --> " + drop_db);
             } 
         }
         drop_icon = moving_icon;
@@ -91,6 +92,11 @@ function onFrame(){
         var move = dest - drop_icon.bounds.center;
         if(move.length <= 1){
             drop_icon.remove();
+            if(drop_db != undefined){
+                console.log("Copy " + selected_db + " --> " + drop_db);
+            }
+            drop_db = undefined;
+            selected_db = undefined;
             drop_icon = undefined;
         } else {
             move.length = Math.ceil(move.length / 10);
