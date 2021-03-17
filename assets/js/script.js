@@ -8,6 +8,8 @@ Httpreq.send(null);
 dbs_json = JSON.parse(Httpreq.responseText);
 console.log(dbs);
 var dbs = {}
+var selected_db;
+var moving_icon;
 dbs_group = new Group()
 
 for (var i = 0; i < dbs_json.length; i++)
@@ -31,7 +33,6 @@ project.importSVG('assets/img/db.svg', function(item, raw) {
         db_position += new Point(170,50);
     }
     item.remove()
-    debugger;
 });
 
 function onFrame(event) {
@@ -43,10 +44,16 @@ function onFrame(event) {
 }
 
 
-function onMouseDrag(event) {
-    var result = dbs_group.hitTest(event.point, {fill: true, stroke: false, segments: false, bounds: true, class: Path});
-    console.log(result);
-    result.item.selected = true;
+function onMouseDown(event) {
+    selected_db = undefined;
+    for (var id in dbs) {
+        if(event.point.isInside(dbs[id]['item'].bounds)){
+            selected_db = id;
+            moving_icon = dbs[id]['item'].clone();
+            break;
+        }
+    }
+    console.log("Selected DB " + selected_db);
 }
 
 // Create a Paper.js Path to draw a line into it:
