@@ -50,10 +50,17 @@ function onMouseDown(event) {
         if(event.point.isInside(dbs[id]['item'].bounds)){
             selected_db = id;
             moving_icon = dbs[id]['item'].clone();
+            moving_icon.strokeColor = '#FF0000';
             break;
         }
     }
     console.log("Selected DB " + selected_db);
+}
+
+function onMouseDrag(event){
+    if(moving_icon != undefined){
+        moving_icon.position = event.point
+    }
 }
 
 // Create a Paper.js Path to draw a line into it:
