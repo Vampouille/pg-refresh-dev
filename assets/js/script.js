@@ -23,7 +23,7 @@ project.importSVG('assets/img/db.svg', function(item, raw) {
     for (var id in dbs) {
         item.position = db_position;
         dbs[id]['item'] = item;
-        label = new PointText({
+        dbs[id]['label'] = new PointText({
             content: id,
             fillColor: '#c7c4c4',
             fontSize: "2em",
@@ -43,6 +43,9 @@ var moving_icon;
 var drop_icon;
 var visible_div = true
 var last_tasks_json = ''
+var transfer_path;
+var transfer_animation;
+var transfer_animation_offset;
 
 function onMouseDown(event) {
     if(drop_icon == undefined){
@@ -79,7 +82,7 @@ function onMouseUp(event){
     }
 }
 
-function onFrame(){
+function onFrame(event){
     if(drop_icon != undefined){
         var dest;
         if(drop_db != undefined){
@@ -104,6 +107,15 @@ function onFrame(){
             drop_icon.position += move;
         }
     }
+    if(transfer_path != undefined){
+
+        if (transfer_animation_offset < transfer_path.length) {
+            transfer_animation.position = transfer_path.getPointAt(transfer_animation_offset)
+            transfer_animation_offset += event.delta * 150
+        } else {
+            transfer_animation_offset = 0
+        }
+    }
 }
 
 function launch_task(from, to){
@@ -113,7 +125,14 @@ function launch_task(from, to){
     req.setRequestHeader("Content-Type", "application/json");
     req.send(JSON.stringify({'from': from, 'to': to}));
     console.log(req.responseText);
-
+    transfer_path = new Path()
+    transfer_path.strokeColor = 'black'
+    transfer_path.add(dbs[from]['label'].bounds.bottomCenter + new Point(0, 10))
+    transfer_path.add(dbs[from]['label'].bounds.bottomCenter + new Point(0, 60))
+    transfer_path.add(dbs[to]['label'].bounds.bottomCenter + new Point(0, 60))
+    transfer_path.add(dbs[to]['label'].bounds.bottomCenter + new Point(0, 10))
+    transfer_animation = new Path.Circle(100,100,10)
+    transfer_animation.strokeColor = 'red'
 }
 
 function gen_row(task){
