@@ -44,6 +44,7 @@ var drop_db;
 var moving_icon;
 var drop_icon;
 var visible_div = true
+var last_tasks_json = ''
 
 function onMouseDown(event) {
     if(drop_icon == undefined){
@@ -161,32 +162,36 @@ function generate_table_header(){
 
 function updateTasks(){
     console.log("Updating tasks")
-    var active_div = document.getElementById('tasks_' + visible_div)
-    var inactive_div = document.getElementById('tasks_' + (!visible_div))
+    // Fetch tasks
+    var req = new XMLHttpRequest()
+    req.open("GET", "/api/task/", false)
+    req.send(null)
+    if(req.responseText != last_tasks_json){
+        last_tasks_json = req.responseText
+        tasks = JSON.parse(req.responseText)
 
-    // Cleanup inactive div and build new table
-    while (inactive_div.firstChild)
-        inactive_div.removeChild(inactive_div.lastChild)
-    table = document.createElement('table')
-    table.appendChild(generate_table_header())
+        var active_div = document.getElementById('tasks_' + visible_div)
+        var inactive_div = document.getElementById('tasks_' + (!visible_div))
 
-    // Fill with new tasks
-    var Httpreq = new XMLHttpRequest()
-    Httpreq.open("GET", "/api/task/", false)
-    Httpreq.send(null)
-    tasks = JSON.parse(Httpreq.responseText)
-    //console.log("Fetches tasks")
-    //console.log(tasks)
-    for (var i = 0; i < tasks.length; i++)
-        addTask(table, tasks[i])
+        // Cleanup inactive div and build new table
+        while (inactive_div.firstChild)
+            inactive_div.removeChild(inactive_div.lastChild)
+        table = document.createElement('table')
+        table.appendChild(generate_table_header())
 
-    inactive_div.appendChild(table)
+        // Fill with new tasks
+        //console.log("Fetches tasks")
+        //console.log(tasks)
+        for (var i = 0; i < tasks.length; i++)
+            addTask(table, tasks[i])
 
-    // Switch div
-    active_div.style.display = 'none'
-    inactive_div.style.display = 'block'
-    visible_div = !visible_div
+        inactive_div.appendChild(table)
 
+        // Switch div
+        active_div.style.display = 'none'
+        inactive_div.style.display = 'block'
+        visible_div = !visible_div
+    }
 }
 
 
