@@ -1,7 +1,7 @@
 import os
 import re
 import concurrent.futures
-from flask import Flask, render_template, send_from_directory, jsonify
+from flask import Flask, render_template, send_from_directory, jsonify, request
 
 from task import Task
 from db import DB
@@ -34,7 +34,8 @@ def tasks_list():
 @app.route('/refresh')
 @app.route('/api/task/', methods=['POST'])
 def create_task():
-    task = Task(executor, 'PROD', 'DEV') 
+    content = request.json
+    task = Task(executor, request.json['from'], request.json['to']) 
     tasks[task.id] = task
     return jsonify(task.to_dict())
 

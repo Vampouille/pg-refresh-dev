@@ -109,31 +109,66 @@ function onFrame(){
 
 function launch_task(from, to){
 
-    var Httpreq = new XMLHttpRequest();
-    Httpreq.open("POST", "/api/task/", false);
-    Httpreq.send({'from': from, 'to': to});
-    console.log(Httpreq.responseText);
+    var req = new XMLHttpRequest();
+    req.open("POST", "/api/task/", false);
+    req.setRequestHeader("Content-Type", "application/json");
+    req.send(JSON.stringify({'from': from, 'to': to}));
+    console.log(req.responseText);
 
 }
 
-function addTask(div, task){
-    var task_div = document.createElement('div')
-    task_div.className = 'task'
-    task_div.innerHTML = task
-    //console.log("Adding task")
-    //console.log(task)
-    div.appendChild(task_div)
+function addTask(table, task){
+    line = document.createElement('tr')
+    line.className = task['state']
+    // From
+    from = document.createElement('td')
+    from.innerHTML = task['db_from']
+    line.appendChild(from)
+    // To
+    to = document.createElement('td')
+    to.innerHTML = task['db_to']
+    line.appendChild(to)
+    // State
+    state = document.createElement('td')
+    state.innerHTML = task['state']
+    line.appendChild(state)
+
+    table.appendChild(line)
 }
 
+function generate_table_header(){
+
+    header = document.createElement('thead')
+
+    // Table header
+    line = document.createElement('tr')
+
+    // From
+    from = document.createElement('th')
+    from.innerHTML = 'From'
+    line.appendChild(from)
+    // To
+    to = document.createElement('th')
+    to.innerHTML = 'To'
+    line.appendChild(to)
+    // State
+    state = document.createElement('th')
+    state.innerHTML = 'State'
+    line.appendChild(state)
+    header.appendChild(line)
+    return header
+}
 
 function updateTasks(){
     console.log("Updating tasks")
     var active_div = document.getElementById('tasks_' + visible_div)
     var inactive_div = document.getElementById('tasks_' + (!visible_div))
 
-    // Cleanup inactive div
+    // Cleanup inactive div and build new table
     while (inactive_div.firstChild)
         inactive_div.removeChild(inactive_div.lastChild)
+    table = document.createElement('table')
+    table.appendChild(generate_table_header())
 
     // Fill with new tasks
     var Httpreq = new XMLHttpRequest()
@@ -143,7 +178,9 @@ function updateTasks(){
     //console.log("Fetches tasks")
     //console.log(tasks)
     for (var i = 0; i < tasks.length; i++)
-        addTask(inactive_div, tasks[i])
+        addTask(table, tasks[i])
+
+    inactive_div.appendChild(table)
 
     // Switch div
     active_div.style.display = 'none'
