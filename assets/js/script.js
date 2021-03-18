@@ -116,7 +116,7 @@ function launch_task(from, to){
 
 }
 
-function addTask(table, task){
+function gen_row(task){
     line = document.createElement('tr')
     line.className = task['state']
 
@@ -127,7 +127,7 @@ function addTask(table, task){
     line.appendChild(gen_td(task['end']))
     line.appendChild(gen_td(task['duration']))
 
-    table.appendChild(line)
+    return line
 }
 
 function gen_td(label){
@@ -160,14 +160,15 @@ function generate_table_header(){
 }
 
 function updateTasks(){
-    console.log("Updating tasks")
     // Fetch tasks
     var req = new XMLHttpRequest()
     req.open("GET", "/api/task/", false)
     req.send(null)
     if(req.responseText != last_tasks_json){
+        console.log("Updating tasks")
         last_tasks_json = req.responseText
         tasks = JSON.parse(req.responseText)
+        tasks = tasks.reverse()
 
         var active_div = document.getElementById('tasks_' + visible_div)
         var inactive_div = document.getElementById('tasks_' + (!visible_div))
@@ -181,9 +182,10 @@ function updateTasks(){
         // Fill with new tasks
         //console.log("Fetches tasks")
         //console.log(tasks)
-        for (var i = 0; i < tasks.length; i++)
-            addTask(table, tasks[i])
-
+        for (var i = 0; i < tasks.length; i++){
+            console.log("Adding task " + tasks[i]['id'])
+            table.appendChild(gen_row(tasks[i]))
+        }
         inactive_div.appendChild(table)
 
         // Switch div
