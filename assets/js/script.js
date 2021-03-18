@@ -43,6 +43,7 @@ var selected_db;
 var drop_db;
 var moving_icon;
 var drop_icon;
+var visible_div = true
 
 function onMouseDown(event) {
     if(drop_icon == undefined){
@@ -94,6 +95,7 @@ function onFrame(){
             drop_icon.remove();
             if(drop_db != undefined){
                 console.log("Copy " + selected_db + " --> " + drop_db);
+                launch_task(selected_db, drop_db);
             }
             drop_db = undefined;
             selected_db = undefined;
@@ -104,3 +106,53 @@ function onFrame(){
         }
     }
 }
+
+function launch_task(from, to){
+
+    var Httpreq = new XMLHttpRequest();
+    Httpreq.open("POST", "/api/task/", false);
+    Httpreq.send({'from': from, 'to': to});
+    console.log(Httpreq.responseText);
+
+}
+
+function addTask(div, task){
+    var task_div = document.createElement('div')
+    task_div.className = 'task'
+    task_div.innerHTML = task
+    //console.log("Adding task")
+    //console.log(task)
+    div.appendChild(task_div)
+}
+
+
+function updateTasks(){
+    console.log("Updating tasks")
+    var active_div = document.getElementById('tasks_' + visible_div)
+    var inactive_div = document.getElementById('tasks_' + (!visible_div))
+
+    // Cleanup inactive div
+    while (inactive_div.firstChild)
+        inactive_div.removeChild(inactive_div.lastChild)
+
+    // Fill with new tasks
+    var Httpreq = new XMLHttpRequest()
+    Httpreq.open("GET", "/api/task/", false)
+    Httpreq.send(null)
+    tasks = JSON.parse(Httpreq.responseText)
+    //console.log("Fetches tasks")
+    //console.log(tasks)
+    for (var i = 0; i < tasks.length; i++)
+        addTask(inactive_div, tasks[i])
+
+    // Switch div
+    active_div.style.display = 'none'
+    inactive_div.style.display = 'block'
+    visible_div = !visible_div
+
+}
+
+
+setInterval(updateTasks, 1000);
+
+
