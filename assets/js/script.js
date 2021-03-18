@@ -17,20 +17,18 @@ project.importSVG('assets/img/db.svg', function(item, raw) {
     console.log("SVG loaded");
     var db_position = new Point(100,100);
     item.scale(2.5);
-    
+    item.strokeColor = "#af6d6d";
+    item.fillColor = "#af6d6d";
+
     for (var id in dbs) {
         item.position = db_position;
         dbs[id]['item'] = item;
         label = new PointText({
             content: id,
+            fillColor: '#c7c4c4',
             fontSize: "2em",
             position: item.bounds.bottomCenter + new Point(0, 20),
         });
-        debug = new Path(new Rectangle(item.bounds));
-        debug.strokeColor = "#FF0000";
-        debug.strokeColor = "#FF0000";
-        debug.selected = true;
-        //
         item = item.clone();
         db_position += new Point(300,0);
     }
@@ -53,8 +51,8 @@ function onMouseDown(event) {
             if(event.point.isInside(dbs[id]['item'].bounds)){
                 selected_db = id;
                 moving_icon = dbs[id]['item'].clone();
-                moving_icon.strokeColor = '#FF0000';
-                moving_icon.fillColor = '#FF0000';
+                moving_icon.strokeColor = '#cb5252';
+                moving_icon.fillColor = '#cb5252';
                 break;
             }
         }

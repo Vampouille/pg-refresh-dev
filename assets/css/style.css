@@ -1,5 +1,7 @@
 html,
 body {
+    background-color: #1d1d1d;
+    color: #c7c4c4;
     overflow: hidden;
     height: 100%;
 }
@@ -9,6 +11,31 @@ canvas[resize] {
     height: 300px;
 }
 
+table {
+    width: 30%;
+    margin-left: 50px;
+}    
+
+db {
+    background-color: #af6d6d;    
+}
+
+db_moving {
+    background-color: hsl(0, 29%, 56%);    
+    background-color: #cb5252;    
+}
 tr[class="Done"] {
-background-color: #eeeeee;    
+    background-color: #4b4a4a;    
+}
+
+tr[class="Pending"] {
+    background-color: #9504a8;    
+}
+
+tr[class="Running"] {
+    background-color: #03a318;    
+}
+
+th, td {
+  padding: 10px;
 }
