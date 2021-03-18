@@ -119,22 +119,28 @@ function launch_task(from, to){
 function addTask(table, task){
     line = document.createElement('tr')
     line.className = task['state']
-    // From
-    from = document.createElement('td')
-    from.innerHTML = task['db_from']
-    line.appendChild(from)
-    // To
-    to = document.createElement('td')
-    to.innerHTML = task['db_to']
-    line.appendChild(to)
-    // State
-    state = document.createElement('td')
-    state.innerHTML = task['state']
-    line.appendChild(state)
+
+    line.appendChild(gen_td(task['db_from']))
+    line.appendChild(gen_td(task['db_to']))
+    line.appendChild(gen_td(task['state']))
+    line.appendChild(gen_td(task['start']))
+    line.appendChild(gen_td(task['end']))
+    line.appendChild(gen_td(task['duration']))
 
     table.appendChild(line)
 }
 
+function gen_td(label){
+    td = document.createElement('td')
+    td.innerHTML = label
+    return td
+}
+
+function gen_th(label){
+    th = document.createElement('th')
+    th.innerHTML = label
+    return th
+}
 function generate_table_header(){
 
     header = document.createElement('thead')
@@ -142,18 +148,13 @@ function generate_table_header(){
     // Table header
     line = document.createElement('tr')
 
-    // From
-    from = document.createElement('th')
-    from.innerHTML = 'From'
-    line.appendChild(from)
-    // To
-    to = document.createElement('th')
-    to.innerHTML = 'To'
-    line.appendChild(to)
-    // State
-    state = document.createElement('th')
-    state.innerHTML = 'State'
-    line.appendChild(state)
+    line.appendChild(gen_th('From'))
+    line.appendChild(gen_th('To'))
+    line.appendChild(gen_th('State'))
+    line.appendChild(gen_th('Start'))
+    line.appendChild(gen_th('End'))
+    line.appendChild(gen_th('Duration'))
+
     header.appendChild(line)
     return header
 }
