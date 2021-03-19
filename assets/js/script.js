@@ -109,11 +109,13 @@ function onFrame(event){
     }
     if(transfer_path != undefined){
 
-        if (transfer_animation_offset < transfer_path.length) {
-            transfer_animation.position = transfer_path.getPointAt(transfer_animation_offset)
-            transfer_animation_offset += event.delta * 150
-        } else {
-            transfer_animation_offset = 0
+        for (var i = 0; i < transfer_animation.length; i++){
+            if (transfer_animation[i].offset < transfer_path.length) {
+                transfer_animation[i].item.position = transfer_path.getPointAt(transfer_animation[i].offset) + transfer_animation[i].shift
+                transfer_animation[i].offset += event.delta * 100
+            } else {
+                transfer_animation[i].offset = 0
+            }
         }
     }
 }
@@ -125,14 +127,26 @@ function launch_task(from, to){
     req.setRequestHeader("Content-Type", "application/json");
     req.send(JSON.stringify({'from': from, 'to': to}));
     console.log(req.responseText);
+    if(transfer_path != undefined)
+        transfer_path.remove()
     transfer_path = new Path()
     transfer_path.strokeColor = 'black'
     transfer_path.add(dbs[from]['label'].bounds.bottomCenter + new Point(0, 10))
     transfer_path.add(dbs[from]['label'].bounds.bottomCenter + new Point(0, 60))
     transfer_path.add(dbs[to]['label'].bounds.bottomCenter + new Point(0, 60))
     transfer_path.add(dbs[to]['label'].bounds.bottomCenter + new Point(0, 10))
-    transfer_animation = new Path.Circle(100,100,10)
-    transfer_animation.strokeColor = 'red'
+
+    if(transfer_animation != undefined)
+        for (var i = 0; i < transfer_animation.length; i++)
+            transfer_animation[i].item.remove()
+    transfer_animation = []
+    for (var i = 0; i < Math.round(transfer_path.length / 20); i++) {
+        transfer_animation[i] = {'item': new Path.Circle(100, 100, 5 + Math.random() * 10),
+                                 'offset': Math.random() * transfer_path.length,
+                                 'shift': new Point((Math.random() * 20) - 10,(Math.random() * 20) - 10)};
+        transfer_animation[i].item.fillColor = '#188f28'
+        transfer_animation[i].item.fillColor.hue = Math.random() * 360
+    }
 }
 
 function gen_row(task){
@@ -216,5 +230,3 @@ function updateTasks(){
 
 
 setInterval(updateTasks, 1000);
-
-

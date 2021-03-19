@@ -22,7 +22,12 @@ db {
 
 db_moving {
     background-color: hsl(0, 29%, 56%);    
-    background-color: #cb5252;    
+    background-color: #cb5252;
+}
+
+transfer {
+    fill: #188f28;
+
 }
 tr[class="Done"] {
     background-color: #4b4a4a;    
