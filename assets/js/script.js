@@ -1,6 +1,7 @@
 let transfer
+// drag and drop
 let dad
-let dbs = {}
+let dbs
 
 /*
  * Variable for drag and drop db
@@ -18,31 +19,37 @@ let transfer_task_id
 
 paper.install(window)
 window.onload = function () {
-    paper.setup('myCanvas');
+    paper.setup('myCanvas')
 
-    /*
-     * Load database definition
-     */
+    fetch('/api/database/') 
+      .then(response => response.json())
+      .then(data => draw_dbs(data))
 
-    var Httpreq = new XMLHttpRequest();
-    Httpreq.open("GET", "/api/database/", false);
-    Httpreq.send(null);
-    dbs_json = JSON.parse(Httpreq.responseText);
-    for (var i = 0; i < dbs_json.length; i++)
-        dbs[dbs_json[i].id] = dbs_json[i]
+    view.onFrame = onFrame 
+    view.onMouseDown = onMouseDown
+    view.onMouseDrag = onMouseDrag
+    view.onMouseUp = onMouseUp
+
+    view.draw()
+}
+
+function draw_dbs(json){
+
+    dbs = {}
+    for (var i = 0; i < json.length; i++)
+        dbs[json[i].id] = json[i]
 
     /*
      * Load DB Icon and draw DBs
      */
     project.importSVG('assets/img/db.svg', function(item, raw) {
-        console.log("SVG loaded");
-        var db_position = new Point(100, 100);
-        item.scale(2.5);
-        item.strokeColor = "#af6d6d";
-        item.fillColor = "#af6d6d";
+        var db_position = new Point(100, 100)
+        item.scale(2.5)
+        item.strokeColor = "#af6d6d"
+        item.fillColor = "#af6d6d"
 
         for (var id in dbs) {
-            item.position = db_position;
+            item.position = db_position
             dbs[id] = {
                 id: id,
                 item: item,
@@ -53,18 +60,13 @@ window.onload = function () {
                     position: item.bounds.bottomCenter.add(new Point(0, 20)),
                 }),
             }
-            item = item.clone();
+            item = item.clone()
             db_position = db_position.add(new Point(300, 0))
         }
         item.remove()
     });
 
-    view.onFrame = onFrame 
-    view.onMouseDown = onMouseDown
-    view.onMouseDrag = onMouseDrag
-    view.onMouseUp = onMouseUp
 
-    view.draw();
 }
 
 function onMouseDown(event) {
@@ -97,11 +99,14 @@ function onFrame(event){
 
 function launch_task(from, to){
 
-    var req = new XMLHttpRequest();
-    req.open("POST", "/api/task/", false);
-    req.setRequestHeader("Content-Type", "application/json");
-    req.send(JSON.stringify({'from': from.id, 'to': to.id}));
-    console.log(req.responseText);
+    fetch('/api/task/', 
+      {
+        method: 'POST',
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({'from': from.id, 'to': to.id})
+      })
+      .then(response => response.json())
+      .then(data => console.log(data))
     if(transfer){
         transfer.delete()
     }
