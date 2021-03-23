@@ -1,4 +1,5 @@
 let transfer
+let dad
 let dbs = {}
 
 /*
@@ -67,66 +68,29 @@ window.onload = function () {
 }
 
 function onMouseDown(event) {
-    if(drop_icon == null){
-    
-        for (var id in dbs) {
+    if(dad == undefined)
+        for (var id in dbs)
             if(event.point.isInside(dbs[id]['item'].bounds)){
-                selected_db = id;
-                moving_icon = dbs[id]['item'].clone();
-                moving_icon.strokeColor = '#cb5252';
-                moving_icon.fillColor = '#cb5252';
+                dad = new DragAndDrop(dbs, dbs[id], launch_task)
                 break;
             }
-        }
-        console.log("Selected DB " + selected_db);
-    }
 }
 
 function onMouseDrag(event){
-    if(moving_icon != null){
-        moving_icon.position = event.point
-    }
+    if(dad)
+        dad.drag(event)
 }
 
 function onMouseUp(event){
-    if(moving_icon != null){
-        bb = moving_icon.bounds
-        drop_db = undefined;
-        for (var id in dbs) {
-            if(id != selected_db && dbs[id]['item'].bounds.intersects(bb)){
-                drop_db = id;
-            } 
-        }
-        drop_icon = moving_icon;
-        moving_icon = undefined;
-    }
+    if(dad)
+        dad.drop(event)
 }
 
 function onFrame(event){
-    if(drop_icon != null){
-        var dest;
-        if(drop_db != undefined){
-            console.log("moving to dest");
-            dest = dbs[drop_db]['item'].bounds.center;
-        } else {
-            console.log("moving to src");
-            dest = dbs[selected_db]['item'].bounds.center;
-        }
-        var move = dest.subtract(drop_icon.bounds.center);
-        if(move.length <= 1){
-            drop_icon.remove();
-            if(drop_db != undefined){
-                console.log("Copy " + selected_db + " --> " + drop_db);
-                launch_task(dbs[selected_db], dbs[drop_db]);
-            }
-            drop_db = undefined;
-            selected_db = undefined;
-            drop_icon = null;
-        } else {
-            move.length = Math.ceil(move.length / 10);
-            drop_icon.position = drop_icon.position.add(move);
-        }
-    }
+    if(dad)
+        if(dad.update(event))
+            dad = undefined
+    
     if(transfer)
         transfer.update(event)
 }
@@ -228,64 +192,6 @@ function updateTasks(){
     }
 }
 
-/*
- * Transfer animation
- */
-class Transfer {
-
-    constructor(from, to) {
-
-        this.path = undefined
-        this.circles = []
-        this.path_padding = 10
-        this.path_height = 50
-        this.shift = 10
-        this.density = 20
-        this.circle_min = 5
-        this.circle_max = 15
-        this.color = '#188f28'
-
-        // Create new hidden path
-        this.path = new Path()
-        this.path.add(from.label.bounds.bottomCenter.add(new Point(0, this.path_padding)))
-        this.path.add(from.label.bounds.bottomCenter.add(new Point(0, this.path_padding + this.path_height)))
-        this.path.add(to.label.bounds.bottomCenter.add(new Point(0, this.path_padding + this.path_height)))
-        this.path.add(to.label.bounds.bottomCenter.add(new Point(0, this.path_padding)))
-
-        // Draw circles
-        for (var i = 0; i < Math.round(this.path.length / this.density); i++) {
-            this.circles[i] = {
-                'item': new Path.Circle(100, 100, this.circle_min + Math.random() * (this.circle_max - this.circle_min)),
-                'offset': Math.random() * this.path.length,
-                'shift': new Point(Math.random() * 2 * this.shift - this.shift,
-                                   Math.random() * 2 * this.shift - this.shift)
-            };
-            this.circles[i].item.fillColor = this.color
-            this.circles[i].item.fillColor.hue = Math.random() * 360
-        }
-    }
-
-    delete() {
-        // Cleanup path
-        this.path.remove()
-        // Cleanup circles
-        for (var i = 0; i < this.circles.length; i++)
-            this.circles[i].item.remove()
-    }
-
-   update(event) {
-
-       for (var i = 0; i < this.circles.length; i++) {
-            if (this.circles[i].offset < this.path.length) {
-                this.circles[i].item.position = this.path.getPointAt(this.circles[i].offset).add(this.circles[i].shift)
-                this.circles[i].offset += event.delta * 100
-            } else {
-                this.circles[i].offset = 0
-            }
-        }
-    }
-
-}
  
 
 setInterval(updateTasks, 1000);
