@@ -1,54 +1,73 @@
-/*
- * Load database definition
- */
+let transfer
+let dbs = {}
 
-var Httpreq = new XMLHttpRequest();
-Httpreq.open("GET", "/api/database/", false);
-Httpreq.send(null);
-dbs_json = JSON.parse(Httpreq.responseText);
-var dbs = {}
-for (var i = 0; i < dbs_json.length; i++)
-    dbs[dbs_json[i].id] = dbs_json[i]
-
-/*
- * Load DB Icon and draw DBs
- */
-project.importSVG('assets/img/db.svg', function(item, raw) {
-    console.log("SVG loaded");
-    var db_position = new Point(100,100);
-    item.scale(2.5);
-    item.strokeColor = "#af6d6d";
-    item.fillColor = "#af6d6d";
-
-    for (var id in dbs) {
-        item.position = db_position;
-        dbs[id]['item'] = item;
-        dbs[id]['label'] = new PointText({
-            content: id,
-            fillColor: '#c7c4c4',
-            fontSize: "2em",
-            position: item.bounds.bottomCenter + new Point(0, 20),
-        });
-        item = item.clone();
-        db_position += new Point(300,0);
-    }
-    item.remove()
-});
 /*
  * Variable for drag and drop db
  */
-var selected_db;
-var drop_db;
-var moving_icon;
-var drop_icon;
-var visible_div = true
-var last_tasks_json = ''
-var transfer_path;
-var transfer_animation;
-var transfer_animation_offset;
+let selected_db;
+let drop_db;
+// db icon dragging follow mouse
+let moving_icon;
+// db icon released that will go to drop_db or return to selected_db
+let drop_icon = null
+let visible_div = true
+let last_tasks_json = ''
+let transfer_task_id
+
+
+paper.install(window)
+window.onload = function () {
+    paper.setup('myCanvas');
+
+    /*
+     * Load database definition
+     */
+
+    var Httpreq = new XMLHttpRequest();
+    Httpreq.open("GET", "/api/database/", false);
+    Httpreq.send(null);
+    dbs_json = JSON.parse(Httpreq.responseText);
+    for (var i = 0; i < dbs_json.length; i++)
+        dbs[dbs_json[i].id] = dbs_json[i]
+
+    /*
+     * Load DB Icon and draw DBs
+     */
+    project.importSVG('assets/img/db.svg', function(item, raw) {
+        console.log("SVG loaded");
+        var db_position = new Point(100, 100);
+        item.scale(2.5);
+        item.strokeColor = "#af6d6d";
+        item.fillColor = "#af6d6d";
+
+        for (var id in dbs) {
+            item.position = db_position;
+            dbs[id] = {
+                id: id,
+                item: item,
+                label: new PointText({
+                    content: id,
+                    fillColor: '#c7c4c4',
+                    fontSize: "2em",
+                    position: item.bounds.bottomCenter.add(new Point(0, 20)),
+                }),
+            }
+            item = item.clone();
+            db_position = db_position.add(new Point(300, 0))
+        }
+        item.remove()
+    });
+
+    view.onFrame = onFrame 
+    view.onMouseDown = onMouseDown
+    view.onMouseDrag = onMouseDrag
+    view.onMouseUp = onMouseUp
+
+    view.draw();
+}
 
 function onMouseDown(event) {
-    if(drop_icon == undefined){
+    if(drop_icon == null){
     
         for (var id in dbs) {
             if(event.point.isInside(dbs[id]['item'].bounds)){
@@ -64,16 +83,17 @@ function onMouseDown(event) {
 }
 
 function onMouseDrag(event){
-    if(moving_icon != undefined){
+    if(moving_icon != null){
         moving_icon.position = event.point
     }
 }
 
 function onMouseUp(event){
-    if(moving_icon != undefined){
+    if(moving_icon != null){
+        bb = moving_icon.bounds
         drop_db = undefined;
         for (var id in dbs) {
-            if(id != selected_db && dbs[id]['item'].bounds.intersects(moving_icon.bounds)){
+            if(id != selected_db && dbs[id]['item'].bounds.intersects(bb)){
                 drop_db = id;
             } 
         }
@@ -83,7 +103,7 @@ function onMouseUp(event){
 }
 
 function onFrame(event){
-    if(drop_icon != undefined){
+    if(drop_icon != null){
         var dest;
         if(drop_db != undefined){
             console.log("moving to dest");
@@ -92,32 +112,23 @@ function onFrame(event){
             console.log("moving to src");
             dest = dbs[selected_db]['item'].bounds.center;
         }
-        var move = dest - drop_icon.bounds.center;
+        var move = dest.subtract(drop_icon.bounds.center);
         if(move.length <= 1){
             drop_icon.remove();
             if(drop_db != undefined){
                 console.log("Copy " + selected_db + " --> " + drop_db);
-                launch_task(selected_db, drop_db);
+                launch_task(dbs[selected_db], dbs[drop_db]);
             }
             drop_db = undefined;
             selected_db = undefined;
-            drop_icon = undefined;
+            drop_icon = null;
         } else {
             move.length = Math.ceil(move.length / 10);
-            drop_icon.position += move;
+            drop_icon.position = drop_icon.position.add(move);
         }
     }
-    if(transfer_path != undefined){
-
-        for (var i = 0; i < transfer_animation.length; i++){
-            if (transfer_animation[i].offset < transfer_path.length) {
-                transfer_animation[i].item.position = transfer_path.getPointAt(transfer_animation[i].offset) + transfer_animation[i].shift
-                transfer_animation[i].offset += event.delta * 100
-            } else {
-                transfer_animation[i].offset = 0
-            }
-        }
-    }
+    if(transfer)
+        transfer.update(event)
 }
 
 function launch_task(from, to){
@@ -125,28 +136,13 @@ function launch_task(from, to){
     var req = new XMLHttpRequest();
     req.open("POST", "/api/task/", false);
     req.setRequestHeader("Content-Type", "application/json");
-    req.send(JSON.stringify({'from': from, 'to': to}));
+    req.send(JSON.stringify({'from': from.id, 'to': to.id}));
     console.log(req.responseText);
-    if(transfer_path != undefined)
-        transfer_path.remove()
-    transfer_path = new Path()
-    transfer_path.strokeColor = 'black'
-    transfer_path.add(dbs[from]['label'].bounds.bottomCenter + new Point(0, 10))
-    transfer_path.add(dbs[from]['label'].bounds.bottomCenter + new Point(0, 60))
-    transfer_path.add(dbs[to]['label'].bounds.bottomCenter + new Point(0, 60))
-    transfer_path.add(dbs[to]['label'].bounds.bottomCenter + new Point(0, 10))
-
-    if(transfer_animation != undefined)
-        for (var i = 0; i < transfer_animation.length; i++)
-            transfer_animation[i].item.remove()
-    transfer_animation = []
-    for (var i = 0; i < Math.round(transfer_path.length / 20); i++) {
-        transfer_animation[i] = {'item': new Path.Circle(100, 100, 5 + Math.random() * 10),
-                                 'offset': Math.random() * transfer_path.length,
-                                 'shift': new Point((Math.random() * 20) - 10,(Math.random() * 20) - 10)};
-        transfer_animation[i].item.fillColor = '#188f28'
-        transfer_animation[i].item.fillColor.hue = Math.random() * 360
+    if(transfer){
+        transfer.delete()
     }
+    transfer = new Transfer(from, to)
+
 }
 
 function gen_row(task){
@@ -218,7 +214,11 @@ function updateTasks(){
         for (var i = 0; i < tasks.length; i++){
             console.log("Adding task " + tasks[i]['id'])
             table.appendChild(gen_row(tasks[i]))
+            // Draw animation of running task if running
+            // TODO animation = new Animation()
+
         }
+        //inactive_div.innerHTML = ''
         inactive_div.appendChild(table)
 
         // Switch div
@@ -228,5 +228,74 @@ function updateTasks(){
     }
 }
 
+/*
+ * Transfer animation
+ */
+class Transfer {
+
+    constructor(from, to) {
+
+        this.path = undefined
+        this.circles = []
+        this.path_padding = 10
+        this.path_height = 50
+        this.shift = 10
+        this.density = 20
+        this.circle_min = 5
+        this.circle_max = 15
+        this.color = '#188f28'
+
+        // Create new hidden path
+        this.path = new Path()
+        this.path.add(from.label.bounds.bottomCenter.add(new Point(0, this.path_padding)))
+        this.path.add(from.label.bounds.bottomCenter.add(new Point(0, this.path_padding + this.path_height)))
+        this.path.add(to.label.bounds.bottomCenter.add(new Point(0, this.path_padding + this.path_height)))
+        this.path.add(to.label.bounds.bottomCenter.add(new Point(0, this.path_padding)))
+
+        // Draw circles
+        for (var i = 0; i < Math.round(this.path.length / this.density); i++) {
+            this.circles[i] = {
+                'item': new Path.Circle(100, 100, this.circle_min + Math.random() * (this.circle_max - this.circle_min)),
+                'offset': Math.random() * this.path.length,
+                'shift': new Point(Math.random() * 2 * this.shift - this.shift,
+                                   Math.random() * 2 * this.shift - this.shift)
+            };
+            this.circles[i].item.fillColor = this.color
+            this.circles[i].item.fillColor.hue = Math.random() * 360
+        }
+    }
+
+    delete() {
+        // Cleanup path
+        this.path.remove()
+        // Cleanup circles
+        for (var i = 0; i < this.circles.length; i++)
+            this.circles[i].item.remove()
+    }
+
+   update(event) {
+
+       for (var i = 0; i < this.circles.length; i++) {
+            if (this.circles[i].offset < this.path.length) {
+                this.circles[i].item.position = this.path.getPointAt(this.circles[i].offset).add(this.circles[i].shift)
+                this.circles[i].offset += event.delta * 100
+            } else {
+                this.circles[i].offset = 0
+            }
+        }
+    }
+
+}
+ 
 
 setInterval(updateTasks, 1000);
+    // fetch('/api/task/', 
+    //   {
+    //     method: 'POST',
+    //     headers: {"Content-Type": "application/json"},
+    //     body: JSON.stringify({'from': from, 'to': to})
+    //   })
+    //   .then(response => response.json())
+    //   .then(data => console.log(data))
+    // // TODO confirm alert("Transfer")
+    // animation = new Animation(from, to)
