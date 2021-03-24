@@ -64,6 +64,8 @@ function draw_dbs(json){
             db_position = db_position.add(new Point(300, 0))
         }
         item.remove()
+        updateTasks()
+        setInterval(updateTasks, 10000)
     });
 
 
@@ -89,9 +91,8 @@ function onMouseUp(event){
 }
 
 function onFrame(event){
-    if(dad)
-        if(dad.update(event))
-            dad = undefined
+    if(dad && dad.update(event))
+        dad = undefined
     
     if(transfer)
         transfer.update(event)
@@ -106,12 +107,44 @@ function launch_task(from, to){
         body: JSON.stringify({'from': from.id, 'to': to.id})
       })
       .then(response => response.json())
-      .then(data => console.log(data))
-    if(transfer){
-        transfer.delete()
-    }
-    transfer = new Transfer(from, to)
+      .then(data => updateTasks())
+}
 
+
+/**
+ * Tasks table
+ */
+
+function updateTasks(){
+    fetch('/api/task/') 
+      .then(response => response.json())
+      .then(data => redraw_table(data))
+}
+
+
+function redraw_table(tasks){
+
+    if(JSON.stringify(tasks) != last_tasks_json){
+        console.log("Updating tasks")
+        last_tasks_json = JSON.stringify(tasks)
+        tasks = tasks.reverse()
+
+        table = document.createElement('table')
+        table.appendChild(generate_table_header())
+
+        tasks.forEach(function(task){
+            if(task.state == 'Running'){
+                if(transfer != undefined)
+                    transfer.delete()
+                transfer = new Transfer(dbs[task.db_from], dbs[task.db_to])
+            }
+            table.appendChild(gen_row(task))
+
+        })
+        document.getElementById('tasks').innerHTML = ''
+        document.getElementById('tasks').appendChild(table)
+
+    }
 }
 
 function gen_row(task){
@@ -134,79 +167,19 @@ function gen_td(label){
     return td
 }
 
-function gen_th(label){
-    th = document.createElement('th')
-    th.innerHTML = label
-    return th
-}
 function generate_table_header(){
 
     header = document.createElement('thead')
 
     // Table header
-    line = document.createElement('tr')
+    header.innerHTML =`<thead><tr>
+        <th>From</th>
+        <th>To</th>
+        <th>State</th>
+        <th>Start</th>
+        <th>End</th>
+        <th>Duration</th>
+    </tr></thead>`
 
-    line.appendChild(gen_th('From'))
-    line.appendChild(gen_th('To'))
-    line.appendChild(gen_th('State'))
-    line.appendChild(gen_th('Start'))
-    line.appendChild(gen_th('End'))
-    line.appendChild(gen_th('Duration'))
-
-    header.appendChild(line)
     return header
 }
-
-function updateTasks(){
-    // Fetch tasks
-    var req = new XMLHttpRequest()
-    req.open("GET", "/api/task/", false)
-    req.send(null)
-    if(req.responseText != last_tasks_json){
-        console.log("Updating tasks")
-        last_tasks_json = req.responseText
-        tasks = JSON.parse(req.responseText)
-        tasks = tasks.reverse()
-
-        var active_div = document.getElementById('tasks_' + visible_div)
-        var inactive_div = document.getElementById('tasks_' + (!visible_div))
-
-        // Cleanup inactive div and build new table
-        while (inactive_div.firstChild)
-            inactive_div.removeChild(inactive_div.lastChild)
-        table = document.createElement('table')
-        table.appendChild(generate_table_header())
-
-        // Fill with new tasks
-        //console.log("Fetches tasks")
-        //console.log(tasks)
-        for (var i = 0; i < tasks.length; i++){
-            console.log("Adding task " + tasks[i]['id'])
-            table.appendChild(gen_row(tasks[i]))
-            // Draw animation of running task if running
-            // TODO animation = new Animation()
-
-        }
-        //inactive_div.innerHTML = ''
-        inactive_div.appendChild(table)
-
-        // Switch div
-        active_div.style.display = 'none'
-        inactive_div.style.display = 'block'
-        visible_div = !visible_div
-    }
-}
-
- 
-
-setInterval(updateTasks, 1000);
-    // fetch('/api/task/', 
-    //   {
-    //     method: 'POST',
-    //     headers: {"Content-Type": "application/json"},
-    //     body: JSON.stringify({'from': from, 'to': to})
-    //   })
-    //   .then(response => response.json())
-    //   .then(data => console.log(data))
-    // // TODO confirm alert("Transfer")
-    // animation = new Animation(from, to)
