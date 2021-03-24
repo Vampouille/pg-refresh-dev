@@ -25,7 +25,7 @@ db_moving {
 
 transfer {
     fill: #188f28;
-
+    color: #b11a1a; 
 }
 tr[class="Done"] {
     background-color: #4b4a4a;    
