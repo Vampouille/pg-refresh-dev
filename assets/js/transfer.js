@@ -3,8 +3,9 @@
  */
 class Transfer {
 
-    constructor(from, to) {
+    constructor(task) {
 
+        this.task = task
         this.path = undefined
         this.circles = []
         this.path_padding = 10
@@ -17,10 +18,10 @@ class Transfer {
 
         // Create new hidden path
         this.path = new Path()
-        this.path.add(from.label.bounds.bottomCenter.add(new Point(0, this.path_padding)))
-        this.path.add(from.label.bounds.bottomCenter.add(new Point(0, this.path_padding + this.path_height)))
-        this.path.add(to.label.bounds.bottomCenter.add(new Point(0, this.path_padding + this.path_height)))
-        this.path.add(to.label.bounds.bottomCenter.add(new Point(0, this.path_padding)))
+        this.path.add(this.task.from.label.bounds.bottomCenter.add(new Point(0, this.path_padding)))
+        this.path.add(this.task.from.label.bounds.bottomCenter.add(new Point(0, this.path_padding + this.path_height)))
+        this.path.add(this.task.to.label.bounds.bottomCenter.add(new Point(0, this.path_padding + this.path_height)))
+        this.path.add(this.task.to.label.bounds.bottomCenter.add(new Point(0, this.path_padding)))
 
         // Draw circles
         for (var i = 0; i < Math.round(this.path.length / this.density); i++) {

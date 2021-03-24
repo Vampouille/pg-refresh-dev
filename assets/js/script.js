@@ -11,8 +11,6 @@ let drop_db;
 // db icon dragging follow mouse
 let moving_icon;
 // db icon released that will go to drop_db or return to selected_db
-let drop_icon = null
-let visible_div = true
 let last_tasks_json = ''
 let transfer_task_id
 
@@ -129,21 +127,37 @@ function redraw_table(tasks){
         last_tasks_json = JSON.stringify(tasks)
         tasks = tasks.reverse()
 
+        // Update table
         table = document.createElement('table')
         table.appendChild(generate_table_header())
 
         tasks.forEach(function(task){
-            if(task.state == 'Running'){
-                if(transfer != undefined)
-                    transfer.delete()
-                transfer = new Transfer(dbs[task.db_from], dbs[task.db_to])
-            }
             table.appendChild(gen_row(task))
-
         })
         document.getElementById('tasks').innerHTML = ''
         document.getElementById('tasks').appendChild(table)
 
+
+        // Update transfer animation
+
+        // Current animation still running ?
+        if(transfer){
+            tasks.forEach(function(task){
+                if(transfer && task.id == transfer.task.id && task.state != 'Running'){
+                    // Remove animation for terminated transfer (Done, Error)
+                    transfer.delete()
+                    transfer = undefined
+                }
+            })
+        } 
+        if(!transfer)
+            tasks.forEach(function (task) {
+                if (task.state == 'Running') {
+                    task.from = dbs[task.db_from]
+                    task.to = dbs[task.db_to]
+                    transfer = new Transfer(task)
+                }
+            })
     }
 }
 
