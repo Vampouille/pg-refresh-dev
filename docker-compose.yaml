@@ -1,9 +1,11 @@
 version: '3'
 services: 
-  db:
+  postgres:
     image: postgres:12
     environment:
       POSTGRES_PASSWORD: pgpass
+      DBS: "prod preprod staging int dev"
+      DB_SCALE: 10
     ports:
       - "5432:5432"
     volumes:
